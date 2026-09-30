@@ -61,12 +61,20 @@ export function zonedDateTimeToUtc(date: string, time: string, timeZone: string)
   return new Date(utc);
 }
 
-/** "(GMT+5:30) Kolkata" */
-export function zoneLabel(zone: string): string {
-  const offset =
-    new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "shortOffset" })
-      .formatToParts(new Date())
-      .find((p) => p.type === "timeZoneName")?.value ?? "GMT";
+/** Offset of `timeZone` from UTC in minutes at instant `ts` (e.g. Kolkata = 330). */
+function offsetMinutes(ts: number, timeZone: string): number {
+  return Math.round((wallClockInZone(ts, timeZone) - ts) / 60_000);
+}
+
+/** "(GMT+5:30) Kolkata". The offset is computed, not taken from Intl's wording, so the
+ * server and the browser always render the identical string (no hydration mismatch). */
+export function zoneLabel(zone: string, at: number = Date.now()): string {
+  const mins = offsetMinutes(at, zone);
+  const sign = mins < 0 ? "-" : "+";
+  const abs = Math.abs(mins);
+  const h = Math.floor(abs / 60);
+  const m = abs % 60;
+  const offset = m ? `GMT${sign}${h}:${pad(m)}` : `GMT${sign}${h}`;
   const city = zone === "UTC" ? "UTC" : (zone.split("/").pop() ?? zone).replace(/_/g, " ");
   return `(${offset}) ${city}`;
 }

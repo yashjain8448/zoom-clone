@@ -1,38 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { Check, CircleCheck, Copy } from "lucide-react";
+import { useClipboard } from "@/hooks/useClipboard";
 import { formatDuration, formatInZone } from "@/lib/datetime";
+import { invitationText } from "@/lib/invitation";
 import type { Meeting } from "@/lib/types";
 
-function invitationText(m: Meeting, when: string): string {
-  return [
-    `${m.host.name} is inviting you to a scheduled Zoom meeting.`,
-    "",
-    `Topic: ${m.title}`,
-    `Time: ${when}`,
-    "",
-    `Join: ${m.invite_link}`,
-    `Meeting ID: ${m.display_code}`,
-    ...(m.passcode ? [`Passcode: ${m.passcode}`] : []),
-  ].join("\n");
-}
-
 export default function ScheduleSuccess({ meeting }: { meeting: Meeting }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useClipboard();
   const when = meeting.scheduled_start ? formatInZone(meeting.scheduled_start, meeting.timezone) : "";
-
-  async function copyInvitation() {
-    try {
-      // Needs a secure context (HTTPS or localhost); can also be denied by the browser.
-      await navigator.clipboard.writeText(invitationText(meeting, when));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
 
   const rows: [string, string][] = [
     ["Topic", meeting.title],
@@ -62,7 +39,7 @@ export default function ScheduleSuccess({ meeting }: { meeting: Meeting }) {
       <div className="mt-6 flex flex-wrap gap-3">
         <button
           type="button"
-          onClick={copyInvitation}
+          onClick={() => copy(invitationText(meeting))}
           className="flex h-10 items-center gap-2 rounded-lg bg-zoom-blue px-5 font-bold text-white hover:bg-zoom-blue-dark"
         >
           {copied ? <Check className="size-4" /> : <Copy className="size-4" />}

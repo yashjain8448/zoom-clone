@@ -15,7 +15,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", icon: House, href: "/" },
   { label: "Team Chat", icon: MessageSquare },
-  { label: "Meetings", icon: Video }, // gets href: "/meetings" in Step 8
+  { label: "Meetings", icon: Video, href: "/meetings" },
   { label: "Phone", icon: Phone },
   { label: "Calendar", icon: Calendar },
   { label: "Mail", icon: Mail },

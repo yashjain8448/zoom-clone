@@ -1,3 +1,5 @@
+import type { Meeting } from "./types";
+
 const timeFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -28,4 +30,26 @@ export function initials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]!.toUpperCase())
     .join("");
+}
+
+/** When the meeting starts (or started): actual start if it happened, else the schedule. */
+export function meetingStart(m: Meeting): string | null {
+  return m.started_at ?? m.scheduled_start;
+}
+
+/** Groups consecutive items that fall on the same local calendar day. Input order is kept. */
+export function groupByDay<T>(
+  items: T[],
+  getIso: (item: T) => string | null,
+): { label: string; items: T[] }[] {
+  const groups: { label: string; items: T[] }[] = [];
+  for (const item of items) {
+    const iso = getIso(item);
+    if (!iso) continue;
+    const label = formatDayLabel(iso);
+    const last = groups[groups.length - 1];
+    if (last?.label === label) last.items.push(item);
+    else groups.push({ label, items: [item] });
+  }
+  return groups;
 }

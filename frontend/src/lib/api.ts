@@ -56,7 +56,8 @@ export const api = {
     request<Meeting[]>("/api/meetings/upcoming", { signal }),
   getRecent: (signal?: AbortSignal) =>
     request<Meeting[]>("/api/meetings/recent?limit=10", { signal }),
-
+    getPrevious: (signal?: AbortSignal) =>
+    request<Meeting[]>("/api/meetings/recent?limit=50", { signal }),
   createInstant: () => post<Meeting>("/api/meetings/instant"),
   schedule: (body: ScheduleInput) => post<Meeting>("/api/meetings/schedule", body),
   lookup: (q: string) =>
