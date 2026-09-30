@@ -1,4 +1,4 @@
-import type { JoinResponse, Meeting, MeetingPublic, User } from "./types";
+import type { JoinResponse, Meeting, MeetingPublic, ScheduleInput, User } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -13,7 +13,9 @@ export class ApiError extends Error {
 function messageFromDetail(detail: unknown, fallback: string): string {
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail)) {
-    const msgs = detail.map((d) => d?.msg).filter(Boolean);
+    const msgs = detail
+      .map((d) => (typeof d?.msg === "string" ? d.msg.replace(/^Value error, /, "") : ""))
+      .filter(Boolean);
     if (msgs.length) return msgs.join(". ");
   }
   return fallback;
@@ -56,6 +58,7 @@ export const api = {
     request<Meeting[]>("/api/meetings/recent?limit=10", { signal }),
 
   createInstant: () => post<Meeting>("/api/meetings/instant"),
+  schedule: (body: ScheduleInput) => post<Meeting>("/api/meetings/schedule", body),
   lookup: (q: string) =>
     request<MeetingPublic>(`/api/meetings/lookup?q=${encodeURIComponent(q)}`),
   getMeeting: (code: string, signal?: AbortSignal) =>

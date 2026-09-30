@@ -11,6 +11,8 @@ import { useFetch } from "@/hooks/useFetch";
 import { api } from "@/lib/api";
 import { saveSession } from "@/lib/session";
 
+
+
 export default function HomePage() {
   const router = useRouter();
   const upcoming = useFetch(api.getUpcoming);
@@ -56,7 +58,7 @@ export default function HomePage() {
               disabled={starting}
             />
             <ActionTile label="Join" icon={Plus} color="blue" onClick={() => setJoinOpen(true)} />
-            <ActionTile label="Schedule" icon={Calendar} color="blue" /> {/* Step 7 */}
+            <ActionTile label="Schedule" icon={Calendar} color="blue" onClick={() => router.push("/schedule")} />
             <ActionTile label="Share screen" icon={ScreenShare} color="blue" />
           </div>
           {startError && (

@@ -55,3 +55,14 @@ export interface JoinResponse {
   participant: Participant;
   meeting: MeetingPublic;
 }
+
+/** Body of POST /api/meetings/schedule. Optional fields are omitted when blank. */
+export interface ScheduleInput {
+  title: string;
+  description?: string;
+  scheduled_start: string; // ISO-8601 UTC
+  duration_minutes: number;
+  timezone: string; // IANA name, e.g. "America/New_York"
+  passcode?: string;
+  invitees: string[];
+}
