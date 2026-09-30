@@ -83,4 +83,13 @@ export const api = {
     ),
   end: (code: string, participantId: number) =>
     post<Meeting>(`/api/meetings/${encodeURIComponent(code)}/end`, { participant_id: participantId }),
+    muteAll: (code: string, participantId: number) =>
+    post<void>(`/api/meetings/${encodeURIComponent(code)}/mute-all`, {
+      participant_id: participantId,
+    }),
+  removeParticipant: (code: string, targetId: number, actorId: number) =>
+    request<void>(
+      `/api/meetings/${encodeURIComponent(code)}/participants/${targetId}?actor_id=${actorId}`,
+      { method: "DELETE" },
+    ),
 };

@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -13,7 +13,7 @@ from app.models.enums import (
 )
 from app.schemas import (
     InstantMeetingCreate, JoinRequest, JoinResponse, MeetingOut,
-    MeetingPublicOut, ParticipantOut, ParticipantRef, ScheduleMeetingCreate,
+    MeetingPublicOut, ParticipantOut, ParticipantRef, ScheduleMeetingCreate, ParticipantMediaUpdate,
 )
 from app.services import meeting_service as svc
 
@@ -22,6 +22,14 @@ router = APIRouter(prefix="/api/meetings", tags=["meetings"])
 # A meeting nobody has started stays in "Upcoming" for a while after its start time.
 UPCOMING_GRACE = timedelta(minutes=15)
 
+def _require_host(db: Session, meeting: Meeting, participant_id: int) -> Participant:
+    """The actor must be a HOST of this meeting and still inside. Scoped lookup, like everywhere else."""
+    actor = svc.get_participant(db, meeting.id, participant_id)
+    if actor is None:
+        raise HTTPException(404, "Participant not found in this meeting.")
+    if actor.role is not ParticipantRole.HOST or actor.status is not ParticipantStatus.JOINED:
+        raise HTTPException(403, "Only the host can do that.")
+    return actor
 
 # ---------------------------------------------------------------- create
 
@@ -192,3 +200,70 @@ def list_participants(
         .order_by(Participant.joined_at, Participant.id)
     )
     return db.scalars(stmt).all()
+
+@router.patch("/{code}/participants/{participant_id}", response_model=ParticipantOut)
+def update_participant_media(
+    participant_id: int,
+    payload: ParticipantMediaUpdate,
+    meeting: Meeting = Depends(get_meeting_or_404),
+    db: Session = Depends(get_db),
+):
+    """Mute/unmute or camera on/off. Scoped to this meeting; only for people still inside."""
+    participant = svc.get_participant(db, meeting.id, participant_id)
+    if participant is None:
+        raise HTTPException(404, "Participant not found in this meeting.")
+    if participant.status is not ParticipantStatus.JOINED:
+        raise HTTPException(409, "You are no longer in this meeting.")
+
+    # exclude_none: an explicit null would violate NOT NULL, so absent and null both mean "unchanged"
+    for field, value in payload.model_dump(exclude_none=True).items():
+        setattr(participant, field, value)
+    db.commit()
+    db.refresh(participant)
+    return participant
+
+@router.post("/{code}/mute-all", status_code=204)
+def mute_all(
+    payload: ParticipantRef,
+    meeting: Meeting = Depends(get_meeting_or_404),
+    db: Session = Depends(get_db),
+):
+    """Host mutes every guest currently inside. One UPDATE statement; the host is skipped."""
+    if meeting.status is MeetingStatus.ENDED:
+        raise HTTPException(410, "This meeting has ended.")
+    _require_host(db, meeting, payload.participant_id)
+
+    db.execute(
+        update(Participant)
+        .where(
+            Participant.meeting_id == meeting.id,
+            Participant.status == ParticipantStatus.JOINED,
+            Participant.role != ParticipantRole.HOST,
+        )
+        .values(is_muted=True)
+    )
+    db.commit()
+
+
+@router.delete("/{code}/participants/{participant_id}", status_code=204)
+def remove_participant(
+    participant_id: int,
+    actor_id: int = Query(description="Participant id of the host making the request"),
+    meeting: Meeting = Depends(get_meeting_or_404),
+    db: Session = Depends(get_db),
+):
+    """Host removes a guest. Idempotent. Not a ban: the guest can rejoin via the lobby."""
+    if meeting.status is MeetingStatus.ENDED:
+        raise HTTPException(410, "This meeting has ended.")
+    _require_host(db, meeting, actor_id)
+
+    target = svc.get_participant(db, meeting.id, participant_id)
+    if target is None:
+        raise HTTPException(404, "Participant not found in this meeting.")
+    if target.role is ParticipantRole.HOST:
+        raise HTTPException(400, "The host can't be removed.")
+
+    if target.status is ParticipantStatus.JOINED:  # already gone = nothing to do
+        target.status = ParticipantStatus.REMOVED
+        target.left_at = utcnow()
+        db.commit()

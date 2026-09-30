@@ -34,3 +34,8 @@ class ParticipantOut(BaseModel):
 class JoinResponse(BaseModel):
     participant: ParticipantOut
     meeting: MeetingPublicOut
+
+class ParticipantMediaUpdate(BaseModel):
+    """Partial update of a participant's own mic/camera state."""
+    is_muted: bool | None = None
+    is_video_off: bool | None = None

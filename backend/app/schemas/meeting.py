@@ -82,6 +82,7 @@ class MeetingPublicOut(BaseModel):
     type: MeetingType
     status: MeetingStatus
     scheduled_start: UTCDateTime | None
+    started_at: UTCDateTime | None
     duration_minutes: int
     host: HostPublic
 

@@ -42,17 +42,30 @@ export default function Room({ code, session, onExit }: Props) {
   const [leaving, setLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
 
+  // Host controls
+  const [hiddenIds, setHiddenIds] = useState<number[]>([]); // removed rows, hidden until the poll agrees
+  const [hostBusy, setHostBusy] = useState(false);
+  const [hostError, setHostError] = useState<string | null>(null);
+
   const { videoRef, status: camera } = useCameraPreview(!videoOff);
 
   const meeting = meetingPoll.data;
   const participants = participantsPoll.data;
   const isHost = session.role === "host";
 
+  // Adopt a mute the *server* changed (the host's "Mute all"). Local clicks win instantly;
+  // this only fires when the polled value itself changes. Setting state during render
+  // (guarded by a comparison) is React's sanctioned alternative to effect + setState.
+  const serverMuted = participants?.find((p) => p.id === session.participantId)?.is_muted;
+  const [seenServerMuted, setSeenServerMuted] = useState<boolean | undefined>(serverMuted);
+  if (serverMuted !== seenServerMuted) {
+    setSeenServerMuted(serverMuted);
+    if (serverMuted !== undefined) setMuted(serverMuted);
+  }
+
   function toggleMute() {
     const next = !muted;
     setMuted(next);
-    // Best effort: local state is the source of truth for our own tile;
-    // others see the change on their next poll.
     api.updateMedia(code, session.participantId, { is_muted: next }).catch(() => {});
   }
 
@@ -83,6 +96,29 @@ export default function Room({ code, session, onExit }: Props) {
     } catch (err) {
       setLeaveError(err instanceof Error ? err.message : "Could not end the meeting.");
       setLeaving(false);
+    }
+  }
+
+  async function muteAll() {
+    if (hostBusy) return;
+    setHostBusy(true);
+    setHostError(null);
+    try {
+      await api.muteAll(code, session.participantId);
+    } catch (err) {
+      setHostError(err instanceof Error ? err.message : "Could not mute everyone.");
+    } finally {
+      setHostBusy(false);
+    }
+  }
+
+  async function removeParticipant(id: number) {
+    setHostError(null);
+    try {
+      await api.removeParticipant(code, id, session.participantId);
+      setHiddenIds((ids) => [...ids, id]); // only hide once the server accepted it
+    } catch (err) {
+      setHostError(err instanceof Error ? err.message : "Could not remove the participant.");
     }
   }
 
@@ -129,9 +165,9 @@ export default function Room({ code, session, onExit }: Props) {
   }
 
   // Our own mic/camera state comes from local state (instant), everyone else's from the poll.
-  const roster = participants.map((p) =>
-    p.id === me.id ? { ...p, is_muted: muted, is_video_off: videoOff } : p,
-  );
+  const roster = participants
+    .filter((p) => !hiddenIds.includes(p.id))
+    .map((p) => (p.id === me.id ? { ...p, is_muted: muted, is_video_off: videoOff } : p));
   const reconnecting = meetingPoll.error !== null || participantsPoll.error !== null;
 
   return (
@@ -169,7 +205,16 @@ export default function Room({ code, session, onExit }: Props) {
         </main>
 
         {panelOpen && (
-          <ParticipantsPanel participants={roster} selfId={me.id} onClose={() => setPanelOpen(false)} />
+          <ParticipantsPanel
+            participants={roster}
+            selfId={me.id}
+            isHost={isHost}
+            busy={hostBusy}
+            error={hostError}
+            onMuteAll={muteAll}
+            onRemove={removeParticipant}
+            onClose={() => setPanelOpen(false)}
+          />
         )}
       </div>
 
