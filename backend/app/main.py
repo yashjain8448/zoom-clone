@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app.seed import seed_if_empty
+from app.routers import meetings, users
 import app.models  # noqa: F401
 
 
@@ -25,7 +26,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.include_router(users.router)
+app.include_router(meetings.router)
 
 @app.get("/api/health")
 def health():

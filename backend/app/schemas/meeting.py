@@ -10,8 +10,8 @@ from pydantic import (
 from app.config import settings
 from app.models.enums import MeetingStatus, MeetingType
 from app.schemas.common import UTCDateTime
-from app.schemas.user import UserOut
 from app.services.meeting_code import format_code
+from app.schemas.user import HostPublic, UserOut   # replace the existing user import
 
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
@@ -72,3 +72,20 @@ class MeetingOut(BaseModel):
     @property
     def invite_link(self) -> str:
         return f"{settings.frontend_url}/j/{self.meeting_code}"
+
+class MeetingPublicOut(BaseModel):
+    """Lookup/lobby view. Deliberately excludes passcode, host email, and internal ids."""
+    model_config = ConfigDict(from_attributes=True)
+
+    meeting_code: str
+    title: str
+    type: MeetingType
+    status: MeetingStatus
+    scheduled_start: UTCDateTime | None
+    duration_minutes: int
+    host: HostPublic
+
+    @computed_field
+    @property
+    def display_code(self) -> str:
+        return format_code(self.meeting_code)
