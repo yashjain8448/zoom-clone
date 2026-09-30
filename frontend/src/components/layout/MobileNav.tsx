@@ -4,18 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS, isActive } from "./nav";
 
-const base =
-  "flex w-19 flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-bold transition-colors " +
-  "focus-visible:outline-2 focus-visible:outline-zoom-blue";
+const item = "flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-bold";
 
-export default function Sidebar() {
+/** Phone-only tab bar (Zoom's mobile app has one). Same items as the desktop Sidebar. */
+export default function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav
-      aria-label="Primary"
-      className="hidden w-19 shrink-0 flex-col items-center gap-1 border-r border-line bg-white py-3 md:flex"
-    >
+    <nav aria-label="Primary" className="flex shrink-0 border-t border-line bg-white md:hidden">
       {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
         if (!href) {
           return (
@@ -24,10 +20,10 @@ export default function Sidebar() {
               type="button"
               disabled
               title="Not part of this demo"
-              className={`${base} cursor-not-allowed text-muted/50`}
+              className={`${item} cursor-not-allowed text-muted/50`}
             >
               <Icon className="size-5" />
-              {label}
+              <span className="max-w-full truncate">{label}</span>
             </button>
           );
         }
@@ -37,10 +33,10 @@ export default function Sidebar() {
             key={label}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`${base} ${active ? "bg-zoom-blue/10 text-zoom-blue" : "text-muted hover:bg-surface"}`}
+            className={`${item} ${active ? "text-zoom-blue" : "text-muted"}`}
           >
             <Icon className="size-5" />
-            {label}
+            <span className="max-w-full truncate">{label}</span>
           </Link>
         );
       })}

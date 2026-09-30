@@ -11,8 +11,6 @@ import { useFetch } from "@/hooks/useFetch";
 import { api } from "@/lib/api";
 import { saveSession } from "@/lib/session";
 
-
-
 export default function HomePage() {
   const router = useRouter();
   const upcoming = useFetch(api.getUpcoming);
@@ -46,10 +44,10 @@ export default function HomePage() {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
-      <div className="space-y-10">
-        <section aria-label="Quick actions" className="space-y-3">
-          <div className="flex flex-wrap gap-6">
+    <>
+      <div className="mx-auto grid max-w-6xl gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[auto_1fr] lg:gap-y-10">
+        <section aria-label="Quick actions" className="space-y-3 lg:col-start-1 lg:row-start-1">
+          <div className="grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:gap-6">
             <ActionTile
               label={starting ? "Starting…" : "New meeting"}
               icon={Video}
@@ -68,15 +66,19 @@ export default function HomePage() {
           )}
         </section>
 
-        <MeetingList title="Recent" state={recent} emptyText="No recent meetings yet." />
+        <aside className="space-y-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
+          <div className="hidden lg:block">
+            <Clock />
+          </div>
+          <MeetingList title="Upcoming" state={upcoming} emptyText="No upcoming meetings scheduled." />
+        </aside>
+
+        <div className="lg:col-start-1 lg:row-start-2 lg:self-start">
+          <MeetingList title="Recent" state={recent} emptyText="No recent meetings yet." />
+        </div>
       </div>
 
-      <aside className="space-y-6">
-        <Clock />
-        <MeetingList title="Upcoming" state={upcoming} emptyText="No upcoming meetings scheduled." />
-      </aside>
-
       {joinOpen && <JoinModal onClose={() => setJoinOpen(false)} />}
-    </div>
+    </>
   );
 }

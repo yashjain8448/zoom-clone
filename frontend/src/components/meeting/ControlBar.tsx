@@ -10,9 +10,12 @@ interface ButtonProps {
   danger?: boolean;
   pressed?: boolean;
   badge?: number;
+  hideOnMobile?: boolean;
 }
 
-function ControlButton({ label, icon: Icon, onClick, disabled, danger, pressed, badge }: ButtonProps) {
+function ControlButton({
+  label, icon: Icon, onClick, disabled, danger, pressed, badge, hideOnMobile,
+}: ButtonProps) {
   return (
     <button
       type="button"
@@ -20,7 +23,7 @@ function ControlButton({ label, icon: Icon, onClick, disabled, danger, pressed, 
       disabled={disabled}
       aria-pressed={pressed}
       title={disabled ? "Not part of this demo" : undefined}
-      className="relative flex w-16 shrink-0 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:w-18"
+      className={`${hideOnMobile ? "hidden sm:flex" : "flex"} relative w-16 shrink-0 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:w-18`}
     >
       <Icon className={`size-6 ${danger ? "text-red-500" : ""}`} aria-hidden />
       {label}
@@ -70,9 +73,9 @@ export default function ControlBar(p: Props) {
           pressed={p.panelOpen}
           onClick={p.onTogglePanel}
         />
-        <ControlButton label="Chat" icon={MessageSquare} disabled />
-        <ControlButton label="Share" icon={ScreenShare} disabled />
-        <ControlButton label="Reactions" icon={Smile} disabled />
+        <ControlButton label="Chat" icon={MessageSquare} disabled hideOnMobile />
+        <ControlButton label="Share" icon={ScreenShare} disabled hideOnMobile />
+        <ControlButton label="Reactions" icon={Smile} disabled hideOnMobile />
       </div>
 
       <button

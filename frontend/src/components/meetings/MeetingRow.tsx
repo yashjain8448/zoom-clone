@@ -35,7 +35,7 @@ export default function MeetingRow({ meeting, upcoming, isHost }: Props) {
   return (
     <li className="px-5 py-4">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <p className="w-36 shrink-0 text-sm text-muted">{formatTimeRange(startIso, endIso)}</p>
+                <p className="w-full text-sm text-muted sm:w-36 sm:shrink-0">{formatTimeRange(startIso, endIso)}</p>
 
         <div className="min-w-0 flex-1">
           <p className="truncate font-bold">{meeting.title}</p>

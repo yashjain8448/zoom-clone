@@ -2,7 +2,10 @@
 
 import { useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useBrowserTimezone, useDefaultStart } from "@/hooks/useBrowserDefaults";
+import {
+  useBrowserTimezone,
+  useDefaultStart,
+} from "@/hooks/useBrowserDefaults";
 import { useFetch } from "@/hooks/useFetch";
 import { api } from "@/lib/api";
 import { COMMON_ZONES, zoneLabel, zonedDateTimeToUtc } from "@/lib/datetime";
@@ -40,7 +43,9 @@ export default function ScheduleForm() {
   const zone = typedZone ?? browserZone;
 
   const zoneOptions = useMemo(() => {
-    const zones = COMMON_ZONES.includes(browserZone) ? [...COMMON_ZONES] : [browserZone, ...COMMON_ZONES];
+    const zones = COMMON_ZONES.includes(browserZone)
+      ? [...COMMON_ZONES]
+      : [browserZone, ...COMMON_ZONES];
     return zones.map((value) => ({ value, label: zoneLabel(value) }));
   }, [browserZone]);
 
@@ -73,7 +78,9 @@ export default function ScheduleForm() {
       });
       setCreated(meeting);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not schedule the meeting.");
+      setError(
+        err instanceof Error ? err.message : "Could not schedule the meeting.",
+      );
       setSubmitting(false);
     }
   }
@@ -84,7 +91,10 @@ export default function ScheduleForm() {
     <div className="mx-auto max-w-3xl">
       <h1 className="text-2xl font-bold">Schedule meeting</h1>
 
-      <form onSubmit={handleSubmit} className="mt-4 divide-y divide-line rounded-2xl border border-line bg-white px-6">
+      <form
+        onSubmit={handleSubmit}
+        className="mt-4 divide-y divide-line rounded-2xl border border-line bg-white px-4 sm:px-6"
+      >
         <FormRow label="Topic" htmlFor="topic">
           <input
             id="topic"

@@ -20,14 +20,14 @@ export default function ActionTile({ label, icon: Icon, color, onClick, disabled
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="group flex flex-col items-center gap-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+      className="group flex w-full flex-col items-center gap-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
     >
       <span
-        className={`grid size-24 place-items-center rounded-[22px] text-white shadow-sm transition-colors group-focus-visible:ring-4 group-focus-visible:ring-zoom-blue/30 ${COLORS[color]}`}
+        className={`grid size-16 place-items-center rounded-2xl text-white shadow-sm transition-colors group-focus-visible:ring-4 group-focus-visible:ring-zoom-blue/30 sm:size-24 sm:rounded-[22px] ${COLORS[color]}`}
       >
-        <Icon className="size-10" strokeWidth={2.25} />
+        <Icon className="size-7 sm:size-10" strokeWidth={2.25} />
       </span>
-      <span className="text-sm font-bold">{label}</span>
+      <span className="text-center text-xs font-bold sm:text-sm">{label}</span>
     </button>
   );
 }
