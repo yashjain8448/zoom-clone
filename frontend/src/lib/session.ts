@@ -18,13 +18,26 @@ export function saveSession(code: string, session: MeetingSession): void {
   }
 }
 
-export function loadSession(code: string): MeetingSession | null {
+/** Raw stored string, or "" when there is none. Used with useSyncExternalStore. */
+export function readSessionRaw(code: string): string {
   try {
-    const raw = sessionStorage.getItem(key(code));
-    return raw ? (JSON.parse(raw) as MeetingSession) : null;
+    return sessionStorage.getItem(key(code)) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function parseSession(raw: string): MeetingSession | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as MeetingSession;
   } catch {
     return null;
   }
+}
+
+export function loadSession(code: string): MeetingSession | null {
+  return parseSession(readSessionRaw(code));
 }
 
 export function clearSession(code: string): void {

@@ -1,4 +1,4 @@
-import type { JoinResponse, Meeting, MeetingPublic, ScheduleInput, User } from "./types";
+import type { JoinResponse, Meeting, MeetingPublic, ScheduleInput, User, Participant } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -70,4 +70,17 @@ export const api = {
     post<void>(`/api/meetings/${encodeURIComponent(code)}/leave`, {
       participant_id: participantId,
     }),
+      getParticipants: (code: string, signal?: AbortSignal) =>
+    request<Participant[]>(`/api/meetings/${encodeURIComponent(code)}/participants`, { signal }),
+  updateMedia: (
+    code: string,
+    participantId: number,
+    body: { is_muted?: boolean; is_video_off?: boolean },
+  ) =>
+    request<Participant>(
+      `/api/meetings/${encodeURIComponent(code)}/participants/${participantId}`,
+      { method: "PATCH", body: JSON.stringify(body) },
+    ),
+  end: (code: string, participantId: number) =>
+    post<Meeting>(`/api/meetings/${encodeURIComponent(code)}/end`, { participant_id: participantId }),
 };

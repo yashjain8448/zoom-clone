@@ -1,6 +1,6 @@
-import RoomPlaceholder from "@/components/meeting/RoomPlaceholder";
+import MeetingRoom from "@/components/meeting/MeetingRoom";
 
 export default async function MeetingPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  return <RoomPlaceholder code={code} />;
+  return <MeetingRoom code={code} />;
 }

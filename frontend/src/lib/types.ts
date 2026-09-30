@@ -29,13 +29,13 @@ export interface Meeting {
   invite_link: string;
 }
 
-/** Mirrors backend `MeetingPublicOut`: no passcode, no host email. */
 export interface MeetingPublic {
   meeting_code: string;
   title: string;
   type: MeetingType;
   status: MeetingStatus;
   scheduled_start: string | null;
+  started_at: string | null;
   duration_minutes: number;
   host: { name: string; avatar_url: string | null };
   display_code: string;
